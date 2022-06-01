@@ -1,0 +1,120 @@
+                                        #CODE TO DICTATE THE KINEMATIC PARAMETERS OF A SELF DRIVING CAR TO AVOID COLLISON
+                                                      #USING THE OPTIMAL VELOCITY MODEL
+import math
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+## Intialising system parameters
+a = 1
+Vmax = 4
+x_c =4     
+
+## Equations defining motion of car
+
+
+def xdot(y):
+    return y
+
+#Velocity of the car
+def ydot(xi,xii,xdot):
+    return (a*(Vmax/2*((math.tanh((xii-xi)-x_c))+(math.tanh(x_c)))-xdot))
+
+#Acceleration of the car
+def V(xi,xii):
+    return (Vmax/2*((math.tanh((xii-xi)-x_c))+(math.tanh(x_c))))                        #Optimal Velocity
+
+
+
+                                  #Choose the relevent case by uncommenting the corrosponding code for elementary cases
+                                                              #OR
+                                         #Enter custom input according to the given situations:
+
+
+                                   # CASE 1 : A clear road in front of a moving vehicle
+
+# Initial Values
+carpos = 0                                                                 #Initial Position of the Car
+objpos = 100                                                                #Initial Position of the Object 
+h = 0.001                                                                  #Step size
+v1 = 1                                                                     #Intialising initial velocity of the car  
+v2 = 0
+                                   # CASE 2 : Stationary object in front of a moving vehicleA clear road in front of a moving vehicle
+
+# Initial Values
+#carpos = 0;                                                                 #Initial Position of the Car
+#objpos = 20;                                                                #Initial Position of the Object 
+#h = 0.001;                                                                  #Step size
+#v1 = V(carpos,objpos);                                                      #Assuming the initial velocity to be optimal
+#v2 = 0
+
+                                   # CASE 3 : A slow moving vehicle in front of another moving vehicle
+
+# Initial Values
+#carpos = 5;                                                                 #Initial Position of the Car
+#objpos = 10;                                                                #Initial Position of the Object 
+#h = 0.001;                                                                  #Step size
+#v1 = V(carpos,objpos);                                                      #Assuming the initial velocity to be optimal
+#v2 = 2;                                                                     #Intialising velocity of the object
+
+
+
+
+
+#Creating Matrix to store values
+count =0;
+rows = 59
+cols = 6
+mat = np.zeros((rows, cols))
+
+
+## Runge Kutta Method to solve the system of diffrential equations 
+for t in range(1, 6000):
+    kx11= xdot(v1)
+    kv11= ydot(carpos,objpos,v1)
+    kx12= xdot(v1+1/2*h*kv11)
+    kv12= ydot(carpos+1/2*h*kx11,objpos,v1+1/2*h*kv11)
+    kx13= xdot(v1+1/2*h*kv12)
+    kv13= ydot(carpos+1/2*h*kx12,objpos,v1+1/2*h*kv12)
+    kx14= xdot(v1+h*kv13)
+    kv14= ydot(carpos+h*kx13,objpos,v1+h*kv13)
+    
+    carpos = carpos+(kx11+2*kx12+2*kx13+kx14)*h/6                 #Position of car after each iteration
+    v1 = v1+(kv11+2*kv12+2*kv13+kv14)*h/6                       #Velocity of car after each iteration
+    if v2 != 0:
+        objpos =10+v2*t*h                            #Position of the object after each iterations(CASE -3)(Function can be modified as per given condition)
+        
+     
+
+    #Array to store the value of position and velocity of car at diffrent times                                                                                                    
+    if t%100==0:
+        mat[count][0], mat[count][1], mat[count][2], mat[count][3],mat[count][4], mat[count][5] = t*h,carpos,objpos,v1,v2,0
+        count = count + 1                                         #Storing values obtained after after every 100 iterations
+
+         
+#Graphing Distance vs Time
+x = mat[:,0]
+y = mat[:,1]
+z = mat[:,2]
+# Depicting the visualization
+plt.plot(x, y, color='blue',label ="Car Position")
+plt.plot(x, z, color='black', linestyle='dotted',label ="Object Position") 
+plt.xlabel('Time(in Sec)') 
+plt.ylabel('Distance(in Meters)')   
+plt.title("Distance vs Time")
+plt.legend(loc="lower right")
+plt.show()
+
+         
+#Graphing Velocity vs Time
+x = mat[:,0]
+y = mat[:,3]
+z = mat[:,4]
+# Depicting the visualization
+plt.plot(x, y, color='blue',label ="Car Velocity")
+plt.plot(x, z, color='black', linestyle='dotted',label ="Object Velocity") 
+plt.xlabel('Time(in Sec)') 
+plt.ylabel('Velocity(in Meters/Second)')   
+plt.title("Velocity vs Time")
+plt.legend(loc="lower right")
+plt.show()
